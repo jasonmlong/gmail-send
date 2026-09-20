@@ -7,6 +7,7 @@ Gmail-identical drafting for AI agents. Renders new messages, replies and forwar
 - Gmail markup reference (the ground truth): [docs/GMAIL-MARKUP.md](docs/GMAIL-MARKUP.md)
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Setup, OAuth, MCP registration: [docs/SETUP.md](docs/SETUP.md)
+- Running it on a remote host: [docs/REMOTE-DEPLOY.md](docs/REMOTE-DEPLOY.md)
 - Backlog mirrored to Jira: [docs/build-plan/BACKLOG.md](docs/build-plan/BACKLOG.md)
 - Agent instructions: [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md)
 
