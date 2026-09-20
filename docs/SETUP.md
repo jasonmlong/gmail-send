@@ -73,20 +73,46 @@ Full deployment notes and security caveats: [../apps-script/README.md](../apps-s
 
 ## 3. Use it from Claude Code (MCP)
 
-`.mcp.json` registers the server as `gmail-send`. It reads `.env`, so once step 2 is done the tools (`draft_reply`, `draft_new`, `draft_forward`, `preview_draft`, `get_style_guide`, `lint_body`, ...) act on the real account. Leave `.env` at `sim` to keep the agent in the sandbox.
+`.mcp.json` registers the server as `gmail-send`, pinned to the simulator. Environment variables set there win over `.env`, so Claude Code stays in the sandbox until you change that file deliberately.
 
-Claude Desktop uses the same shape in `claude_desktop_config.json` with absolute paths:
+Alongside it, `.claude/skills/gmail-drafting/SKILL.md` teaches the drafting workflow: read the style guide, read the thread, write plain text, lint, then draft. Claude Code loads it automatically.
+
+## 4. Use it from Claude Desktop
+
+Add the server to `claude_desktop_config.json`. On Windows that file is at `%APPDATA%\Claude\claude_desktop_config.json`; on macOS, `~/Library/Application Support/Claude/claude_desktop_config.json`. Merge this into the existing `mcpServers` object rather than replacing the file, which also holds your app preferences.
 
 ```json
 {
   "mcpServers": {
     "gmail-send": {
-      "command": "node",
-      "args": ["/path/to/gmail-send/node_modules/tsx/dist/cli.mjs", "/path/to/gmail-send/src/mcp/server.ts"]
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "C:\\path\\to\\gmail-send\\node_modules\\tsx\\dist\\cli.mjs",
+        "C:\\path\\to\\gmail-send\\src\\mcp\\server.ts"
+      ],
+      "env": { "GMAIL_SEND_PROVIDER": "appsscript" }
     }
   }
 }
 ```
+
+Four things that are easy to get wrong here.
+
+- **Use an absolute path for `command`.** Desktop does not inherit your shell PATH, so a bare `node` fails.
+- **There is no working-directory setting**, and the process does not start in this repo. That is fine: the server locates its own `.env` and config relative to its own file, not the working directory.
+- **Leave the URL and token out of this file.** They stay in `.env`, so the credential exists in one place. Only the provider is named here, so the config states which mailbox it talks to.
+- **Fully quit and reopen Desktop** to reload the config. Closing the window is not enough; the config is read only at startup.
+
+If the tools do not appear, the logs are at `%APPDATA%\Claude\logs\` (Settings, Developer, Open Logs Folder).
+
+### Desktop does not read SKILL.md
+
+Local skill files are a Claude Code feature. Claude Desktop loads skills only from your claude.ai account settings, so the file in `.claude/skills/` has no effect there. Two things carry the same guidance to Desktop instead, and both work today:
+
+- the server's `instructions`, sent during the MCP handshake
+- the tool descriptions themselves, which every client passes to the model
+
+So the drafting rules reach Desktop whether or not it ever gains local skill support. If you want the fuller skill there as well, add it as a skill on claude.ai and it will appear in Desktop.
 
 ## 4. Direct Gmail API mode (optional)
 
