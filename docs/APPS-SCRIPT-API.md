@@ -12,6 +12,38 @@ Response body is always JSON: `{"ok": true, "result": ...}` or `{"ok": false, "e
 
 `GET` on the same URL needs no token and deliberately returns only `{"ok":true,"result":{"name":"gmail-send"}}`. It used to report the mailbox address and whether sending was armed, which handed anyone who found the URL both a target and a reason to attack it.
 
+## Tokens and capabilities
+
+Every token is minted with a fixed set of capabilities. A request must satisfy **both** the token's own capabilities and the deployment's global switches, so a token issued for drafting cannot send even if sending is later enabled for everyone.
+
+| Capability | Actions it permits |
+|---|---|
+| `read` | profile, listThreads, getThread, getMessage, listSignatures, listDrafts, getDraft |
+| `draft` | createDraft, updateDraft, deleteDraft, draftReply, draftNew, draftForward, redraft |
+| `send` | sendDraft (also needs the global send switch) |
+| `settings` | saveSignature (also needs the global settings switch) |
+
+Mint and revoke from the Apps Script editor; there is no action that changes them over the wire.
+
+| Function | What it does |
+|---|---|
+| `mintDraftOnlyToken()` | `read` + `draft`. The one to give a remote or unattended agent. |
+| `mintReadOnlyToken()` | `read` only. |
+| `listTokens()` | Labels, capabilities, creation dates, live or revoked. |
+| `revokeTokenByLabel()` | Revokes one label; takes effect on the next request, no redeploy. |
+| `rotateToken()` | New primary token. Other tokens are unaffected. |
+| `purgeRevokedTokens()` | Forget revoked entries once the audit trail is no longer wanted. |
+
+Tokens are stored as SHA-256 hashes, so the script properties contain nothing usable. A minted token is shown once, at mint time. The primary token is the exception: it is also kept in plaintext so `setup()` can reprint it.
+
+A refused capability returns a specific error, since the caller already authenticated and hiding the reason would only waste its time:
+
+```
+This token cannot sendDraft. It holds [read, draft] and that action needs "send".
+```
+
+`profile` reports the calling token's own view: `tokenLabel`, `capabilities`, `canSend` and `canWriteSettings`, the last two already combining the capability with the global switch. The MCP server uses `canSend` to decide whether to advertise a send tool at all.
+
 ## Capability switches
 
 Three things a stolen token should not be able to do are off by default and can only be turned on from the Apps Script editor, never over the wire. There is no action that changes them.

@@ -3,30 +3,39 @@
 // gmail-send lightweight Apps Script API.
 //
 // Deploy this project as a web app (Execute as: me, Access: Anyone) inside
-// any Google account. An agent then POSTs JSON to the /exec URL with the
-// shared token and gets Gmail-identical drafts written straight into that
+// any Google account. An agent then POSTs JSON to the /exec URL with a
+// token and gets Gmail-identical drafts written straight into that
 // account's Drafts folder. No Cloud OAuth client, no payments, no tiers.
 //
 // Protocol:  POST { token, action, ...params }  ->  { ok: true, result } | { ok: false, error }
 // Actions are listed in ACTIONS below and documented in docs/APPS-SCRIPT-API.md.
 //
 // SECURITY POSTURE (see docs/SECURITY-REVIEW.md)
-// The deployment is reachable by anyone on the internet and the token is the
-// only guard, so the token is treated as "may read this mailbox and stage
-// drafts in it" and nothing more. Three capabilities that a stolen token
-// should not confer are switched off by default and can only be turned on
-// from the Apps Script editor, never over the wire:
-//   - sending                (setAllowSend)
-//   - writing Gmail settings (setAllowSettingsWrite)
-//   - deleting drafts this API did not create (never; there is no switch)
+// The deployment is reachable by anyone on the internet, so a token is the
+// only guard and is treated accordingly. Two independent limits apply to
+// every request:
+//
+//   1. The token's OWN capabilities. Each token is minted with a fixed set,
+//      so a token issued for drafting cannot send, ever, regardless of any
+//      switch. This is the durable limit: it travels with the credential.
+//   2. The deployment's global switches. Even a token holding "send" cannot
+//      send while GMAIL_SEND_ALLOW_SEND is off. These can only be changed
+//      from the Apps Script editor, never over the wire.
+//
+// A request must pass both. Giving a remote machine a read+draft token means
+// it cannot send even if someone later arms sending for the primary token.
 // ==========================================
 
-var GMAIL_SEND_VERSION = '0.3.0';
+var GMAIL_SEND_VERSION = '0.4.0';
+
+// Every action names the capability it needs. A token without it is refused
+// before the handler runs.
+var CAPABILITIES = ['read', 'draft', 'send', 'settings'];
 
 /**
  * Unauthenticated probe. Deliberately says almost nothing: anyone who finds
  * the URL should not thereby learn whose mailbox is behind it, what version
- * is running, or whether sending is armed. Everything else needs the token.
+ * is running, or what it can do. Everything else needs a token.
  */
 function doGet(e) {
   return json_({ ok: true, result: { name: 'gmail-send' } });
@@ -39,61 +48,104 @@ function doPost(e) {
   } catch (parseError) {
     return json_({ ok: false, error: 'Bad request' });
   }
-  // Authenticate before doing any work at all, so an unauthenticated caller
-  // cannot make the script burn the owner's execution quota.
   if (!req || typeof req !== 'object') return json_({ ok: false, error: 'Bad request' });
-  var token = getToken_();
-  if (!token || !req.token || req.token !== token) return json_({ ok: false, error: 'Unauthorized' });
 
-  if (typeof req.action !== 'string' || !Object.prototype.hasOwnProperty.call(ACTIONS, req.action) || typeof ACTIONS[req.action] !== 'function') {
-    // hasOwnProperty matters: a plain object literal also answers to
-    // "constructor", "valueOf" and friends through its prototype, which would
-    // make this allowlist not an allowlist.
+  // Authenticate before doing any work, so an anonymous caller cannot make
+  // the script burn the owner's execution quota.
+  var auth = authenticate_(req.token);
+  if (!auth) return json_({ ok: false, error: 'Unauthorized' });
+
+  // hasOwnProperty matters: a plain object literal also answers to
+  // "constructor", "valueOf" and friends through its prototype, which would
+  // make this allowlist not an allowlist.
+  if (typeof req.action !== 'string' || !Object.prototype.hasOwnProperty.call(ACTIONS, req.action)) {
     return json_({ ok: false, error: 'Unknown action' });
+  }
+  var entry = ACTIONS[req.action];
+  if (!entry || typeof entry.fn !== 'function') return json_({ ok: false, error: 'Unknown action' });
+
+  if (auth.caps.indexOf(entry.cap) === -1) {
+    return json_({
+      ok: false,
+      error: 'This token cannot ' + req.action + '. It holds [' + auth.caps.join(', ') + '] and that action needs "' + entry.cap + '".',
+    });
   }
 
   try {
     installFormatters_();
-    return json_({ ok: true, result: ACTIONS[req.action](req) });
+    return json_({ ok: true, result: entry.fn(req, auth) });
   } catch (err) {
     var message = String((err && err.message) || err);
-    console.error('gmail-send action ' + req.action + ' failed: ' + message);
+    console.error('gmail-send ' + req.action + ' [' + auth.label + '] failed: ' + message);
     return json_({ ok: false, error: message });
   }
 }
 
 var ACTIONS = {
   // ---- read ----
-  profile: function () { return getProfile_(); },
-  listThreads: function (r) { return listThreads_(r.query, r.max); },
-  getThread: function (r) { return getThread_(r.threadId); },
-  getMessage: function (r) { return getMessage_(r.messageId); },
-  listSignatures: function () { return listSignatures_(); },
-  listDrafts: function (r) { return listDrafts_(r.threadId); },
-  getDraft: function (r) { return getDraft_(r.draftId); },
+  profile: { cap: 'read', fn: function (r, auth) { return getProfile_(auth); } },
+  listThreads: { cap: 'read', fn: function (r) { return listThreads_(r.query, r.max); } },
+  getThread: { cap: 'read', fn: function (r) { return getThread_(r.threadId); } },
+  getMessage: { cap: 'read', fn: function (r) { return getMessage_(r.messageId); } },
+  listSignatures: { cap: 'read', fn: function () { return listSignatures_(); } },
+  listDrafts: { cap: 'read', fn: function (r) { return listDrafts_(r.threadId); } },
+  getDraft: { cap: 'read', fn: function (r) { return getDraft_(r.draftId); } },
 
   // ---- write: drafts only ----
-  createDraft: function (r) { return createDraftFromRaw_(r.raw, r.threadId); },
-  updateDraft: function (r) { return updateDraftFromRaw_(r.draftId, r.raw, r.threadId); },
-  deleteDraft: function (r) { return deleteOwnDraft_(r.draftId); },
+  createDraft: { cap: 'draft', fn: function (r) { return createDraftFromRaw_(r.raw, r.threadId); } },
+  updateDraft: { cap: 'draft', fn: function (r) { return updateDraftFromRaw_(r.draftId, r.raw, r.threadId); } },
+  deleteDraft: { cap: 'draft', fn: function (r) { return deleteOwnDraft_(r.draftId); } },
 
   // ---- high-level: the script renders the Gmail-identical draft itself ----
-  draftReply: function (r) { return draftReply_(r); },
-  draftNew: function (r) { return draftNew_(r); },
-  draftForward: function (r) { return draftForward_(r); },
-  redraft: function (r) { return redraft_(r); },
+  draftReply: { cap: 'draft', fn: function (r) { return draftReply_(r); } },
+  draftNew: { cap: 'draft', fn: function (r) { return draftNew_(r); } },
+  draftForward: { cap: 'draft', fn: function (r) { return draftForward_(r); } },
+  redraft: { cap: 'draft', fn: function (r) { return redraft_(r); } },
 
-  // ---- gated: off unless the owner enabled it in the editor ----
-  saveSignature: function (r) { return saveSignature_(r.sendAsEmail, r.html); },
-  sendDraft: function (r) { return sendDraft_(r.draftId); },
+  // ---- capability-gated AND switch-gated ----
+  saveSignature: { cap: 'settings', fn: function (r) { return saveSignature_(r.sendAsEmail, r.html); } },
+  sendDraft: { cap: 'send', fn: function (r) { return sendDraft_(r.draftId); } },
 };
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-function getToken_() {
-  return PropertiesService.getScriptProperties().getProperty('GMAIL_SEND_TOKEN') || '';
+// ---- tokens ------------------------------------------------------------------
+
+/**
+ * Tokens are stored as SHA-256 hashes, so a dump of the script properties
+ * yields nothing usable. A minted token is therefore shown exactly once, at
+ * mint time; if it is lost, revoke it and mint another.
+ */
+function hashToken_(token) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token, Utilities.Charset.UTF_8);
+  var out = '';
+  for (var i = 0; i < bytes.length; i++) out += ('0' + (bytes[i] & 0xff).toString(16)).slice(-2);
+  return out;
+}
+
+function loadTokens_() {
+  var raw = PropertiesService.getScriptProperties().getProperty('GMAIL_SEND_TOKENS');
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveTokens_(map) {
+  PropertiesService.getScriptProperties().setProperty('GMAIL_SEND_TOKENS', JSON.stringify(map));
+}
+
+/** Returns the token's record, or null. Never reveals which part failed. */
+function authenticate_(token) {
+  if (typeof token !== 'string' || !token) return null;
+  var rec = loadTokens_()[hashToken_(token)];
+  if (!rec || rec.revoked) return null;
+  if (!rec.caps || !rec.caps.length) return null;
+  return rec;
 }
 
 function allowSend_() {

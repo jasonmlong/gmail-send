@@ -125,7 +125,17 @@ export class SimulatedGmail implements MailProvider {
   // ---- MailProvider ------------------------------------------------------
 
   async getProfile(): Promise<Profile> {
-    return { email: this.state.profile.email, name: this.state.profile.name, sendAs: this.state.sendAs, timeZone: this.state.profile.timeZone };
+    return {
+      email: this.state.profile.email,
+      name: this.state.profile.name,
+      sendAs: this.state.sendAs,
+      timeZone: this.state.profile.timeZone,
+      // The simulator has no credential to scope, so it reports everything and
+      // lets the drafting service's own send gate be the limit.
+      capabilities: ['read', 'draft', 'send', 'settings'],
+      canSend: true,
+      canWriteSettings: true,
+    };
   }
 
   async listThreads(q: ListThreadsQuery = {}): Promise<ThreadSummary[]> {

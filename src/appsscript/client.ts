@@ -71,6 +71,8 @@ export class AppsScriptProvider implements MailProvider {
   }
 
   async getProfile(): Promise<Profile> {
+    // Carries tokenLabel, capabilities, canSend and canWriteSettings, which
+    // describe what THIS token may do rather than what the mailbox allows.
     return this.call<Profile>('profile');
   }
 

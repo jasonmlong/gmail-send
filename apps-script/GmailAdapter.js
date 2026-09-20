@@ -5,7 +5,12 @@
 // Advanced Gmail Service so To/Cc/Bcc and threading headers are exact).
 // ==========================================
 
-function getProfile_() {
+/**
+ * @param {{label: string, caps: string[]}} [auth] the calling token's record,
+ *   when there is one. Reporting its capabilities back lets a client hide
+ *   actions it cannot perform rather than discovering that by failing.
+ */
+function getProfile_(auth) {
   var email = Session.getEffectiveUser().getEmail();
   var sendAs = [];
   try {
@@ -18,7 +23,19 @@ function getProfile_() {
   }
   var def = null;
   for (var i = 0; i < sendAs.length; i++) if (sendAs[i].isDefault) def = sendAs[i];
-  return { email: email, name: def ? def.name : undefined, sendAs: sendAs, timeZone: userTimeZone_() };
+
+  var caps = auth ? auth.caps : CAPABILITIES;
+  return {
+    email: email,
+    name: def ? def.name : undefined,
+    sendAs: sendAs,
+    timeZone: userTimeZone_(),
+    tokenLabel: auth ? auth.label : undefined,
+    capabilities: caps,
+    // What this caller can actually do, once both gates are applied.
+    canSend: caps.indexOf('send') !== -1 && allowSend_(),
+    canWriteSettings: caps.indexOf('settings') !== -1 && allowSettingsWrite_(),
+  };
 }
 
 /** The user's timezone from their primary Google Calendar; falls back to the script timezone. */

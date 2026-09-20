@@ -57,7 +57,17 @@ export class GmailProvider implements MailProvider {
       replyTo: s.replyToAddress ?? undefined,
     }));
     const def = identities.find((i) => i.isDefault);
-    return { email: prof.data.emailAddress ?? '', name: def?.name, sendAs: identities, timeZone };
+    // Direct OAuth carries no per-credential scoping: the token's Google scopes
+    // permit everything this adapter does, so the send gate is the local flag.
+    return {
+      email: prof.data.emailAddress ?? '',
+      name: def?.name,
+      sendAs: identities,
+      timeZone,
+      capabilities: ['read', 'draft', 'send', 'settings'],
+      canSend: true,
+      canWriteSettings: true,
+    };
   }
 
   async listThreads(q: ListThreadsQuery = {}): Promise<ThreadSummary[]> {

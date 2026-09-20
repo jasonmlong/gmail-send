@@ -7,6 +7,7 @@
  * one checks the server: the dispatcher, the token gate, the capability
  * switches and the raw-message allowlist are what actually face the internet.
  */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -19,8 +20,11 @@ interface Ctx {
   doGet: (e?: unknown) => { getContent(): string };
   doPost: (e: unknown) => { getContent(): string };
   setup: () => void;
+  setAllowSend: (f: boolean) => void;
   setAllowSettingsWrite: (f: boolean) => void;
   setSearchScope: (q: string) => void;
+  mintToken_: (label: string, caps: string[]) => string;
+  revokeTokenByLabel: () => void;
   __props: Record<string, string>;
   __userProps: Record<string, string>;
   __searches: string[];
@@ -30,6 +34,7 @@ interface Ctx {
 }
 
 const ME = 'owner@example.com';
+let uuidCounter = 1;
 
 function makeContext(): Ctx {
   const props: Record<string, string> = {};
@@ -99,8 +104,12 @@ function makeContext(): Ctx {
     CalendarApp: { getDefaultCalendar: () => ({ getTimeZone: () => 'America/Cancun' }) },
     Logger: { log: () => {} },
     Utilities: {
-      getUuid: () => '11111111-2222-3333-4444-555555555555',
+      // Unique per call, the way Apps Script's own does, so minting two tokens
+      // in one test does not silently produce the same secret twice.
+      getUuid: () => `${(uuidCounter++).toString(16).padStart(8, '0')}-2222-3333-4444-555555555555`,
       base64EncodeWebSafe: (s: string) => Buffer.from(s, 'utf8').toString('base64url'),
+      computeDigest: (_algo: string, value: string) => Array.from(createHash('sha256').update(value, 'utf8').digest()),
+      DigestAlgorithm: { SHA_256: 'SHA_256' },
       Charset: { UTF_8: 'utf8' },
       formatDate: (d: Date, tz: string, fmt: string) =>
         fmt === 'EEE|MMM|d|yyyy|h|mm|a'
@@ -252,6 +261,79 @@ describe('Apps Script endpoint', () => {
     const res = post(ctx, { token, action: 'sendDraft', draftId: 'rOWNED' });
     expect(res.ok).toBe(false);
     expect(res.error).toMatch(/Sending is disabled/);
+  });
+
+  describe('per-token capabilities', () => {
+    it('a draft-only token can read and draft', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      expect(post(ctx, { token: t, action: 'listThreads' }).ok).toBe(true);
+      expect(post(ctx, { token: t, action: 'draftReply', threadId: 'thr1', body: 'Hey,\n\nOk.\n\nThank you!' }).ok).toBe(true);
+    });
+
+    it('a draft-only token cannot send, even once sending is enabled globally', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      ctx.setAllowSend(true);
+      const res = post(ctx, { token: t, action: 'sendDraft', draftId: 'rOWNED' });
+      expect(res.ok).toBe(false);
+      expect(res.error).toMatch(/cannot sendDraft/);
+      expect(res.error).toMatch(/needs "send"/);
+      // and the primary token, which does hold "send", now can
+      expect(post(ctx, { token, action: 'sendDraft', draftId: 'rOWNED' }).ok).toBe(true);
+    });
+
+    it('a draft-only token cannot touch Gmail settings', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      ctx.setAllowSettingsWrite(true);
+      const res = post(ctx, { token: t, action: 'saveSignature', html: '<div>x</div>' });
+      expect(res.ok).toBe(false);
+      expect(res.error).toMatch(/needs "settings"/);
+      expect(ctx.__patched).toHaveLength(0);
+    });
+
+    it('a read-only token cannot create or delete drafts', () => {
+      const t = ctx.mintToken_('viewer', ['read']);
+      expect(post(ctx, { token: t, action: 'getThread', threadId: 'thr1' }).ok).toBe(true);
+      expect(post(ctx, { token: t, action: 'draftNew', to: 'a@b.com', subject: 's', body: 'Hey,\n\nx\n\nThank you!' }).error).toMatch(/needs "draft"/);
+      expect(post(ctx, { token: t, action: 'createDraft', raw: 'Subject: x\r\n\r\nbody' }).error).toMatch(/needs "draft"/);
+      expect(post(ctx, { token: t, action: 'deleteDraft', draftId: 'rOWNED' }).error).toMatch(/needs "draft"/);
+    });
+
+    it('profile reports what the calling token may do', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      ctx.setAllowSend(true);
+      const asRemote = post(ctx, { token: t, action: 'profile' }).result;
+      expect(asRemote.tokenLabel).toBe('openclaw');
+      expect(asRemote.capabilities).toEqual(['read', 'draft']);
+      expect(asRemote.canSend).toBe(false);
+
+      const asPrimary = post(ctx, { token, action: 'profile' }).result;
+      expect(asPrimary.tokenLabel).toBe('primary');
+      expect(asPrimary.canSend).toBe(true);
+    });
+
+    it('a revoked token stops working, and the others keep working', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      expect(post(ctx, { token: t, action: 'profile' }).ok).toBe(true);
+      ctx.revokeTokenByLabel(); // the editable label in that function is 'openclaw'
+      expect(post(ctx, { token: t, action: 'profile' }).error).toBe('Unauthorized');
+      expect(post(ctx, { token, action: 'profile' }).ok).toBe(true);
+    });
+
+    it('stores only hashes, so the properties hold no usable secret', () => {
+      const t = ctx.mintToken_('openclaw', ['read', 'draft']);
+      const registry = ctx.__props.GMAIL_SEND_TOKENS;
+      expect(registry).not.toContain(t);
+      expect(JSON.parse(registry)[createHash('sha256').update(t, 'utf8').digest('hex')].label).toBe('openclaw');
+    });
+
+    it('refuses a duplicate live label so tokens stay tellable apart', () => {
+      ctx.mintToken_('openclaw', ['read', 'draft']);
+      expect(() => ctx.mintToken_('openclaw', ['read'])).toThrow(/already labelled/);
+    });
+
+    it('refuses a capability that does not exist', () => {
+      expect(() => ctx.mintToken_('bad', ['read', 'admin'])).toThrow(/Unknown capability: admin/);
+    });
   });
 
   it('there is no action that can arm sending or settings writes over the wire', () => {

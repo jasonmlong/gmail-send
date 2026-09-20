@@ -107,6 +107,9 @@ Four independent adversarial passes before the first public deployment. Findings
 - [x] T10.16 Unknown message id returns a clean error instead of a null dereference
 - [x] T10.17 `config/signatures.json` git-ignored; `config/signatures.example.json` shipped
 - [x] T10.18 Regression tests for every finding (`tests/security.test.ts`) and the first real endpoint tests, running the actual Apps Script files against stubbed Google services (`tests/appsscript-endpoint.test.ts`)
+- [x] T10.19b Per-token capabilities (read / draft / send / settings), enforced in the dispatcher and combined with the global switches, so a credential issued to a remote agent cannot send regardless of any setting (`apps-script/Api.js`, `apps-script/Setup.js`)
+- [x] T10.19c Tokens stored as SHA-256 hashes and shown once at mint time; mint, list, revoke and purge from the editor only
+- [x] T10.19d MCP server probes the backend and advertises a send tool only when the credential in use can actually send (`src/mcp/server.ts`)
 - [ ] T10.19 Decide whether the deployment can move off anonymous access, which needs the Node client to carry a Google identity
 - [ ] T10.20 Set a search scope on the deployment once it is live
 - [ ] T10.21 Bind human approval to a content hash if sending is ever enabled, so a draft cannot be re-rendered between review and send

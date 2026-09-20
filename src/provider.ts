@@ -19,12 +19,25 @@ export interface SendAsIdentity {
   replyTo?: string;
 }
 
+export type Capability = 'read' | 'draft' | 'send' | 'settings';
+
 export interface Profile {
   email: string;
   name?: string;
   sendAs: SendAsIdentity[];
   /** The user's timezone as reported by their Google Calendar (best available proxy for the clock Gmail's attribution line uses). */
   timeZone?: string;
+  /** Label of the credential in use, when the backend issues named ones. */
+  tokenLabel?: string;
+  /** What this credential is permitted to do. Absent means the backend does not scope capabilities. */
+  capabilities?: Capability[];
+  /**
+   * Whether sending is actually possible for this caller right now, after both
+   * the credential's own capabilities and the deployment's switches are applied.
+   * A draft-only token reports false even when sending is enabled globally.
+   */
+  canSend?: boolean;
+  canWriteSettings?: boolean;
 }
 
 export type ProviderKind = 'sim' | 'gmail' | 'appsscript';
