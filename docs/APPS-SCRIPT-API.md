@@ -69,7 +69,7 @@ Dates travel as ISO 8601 strings. Addresses are `{name?, email}`. A `Message` is
 
 No action accepts `bcc` or `addBcc`, and the raw-draft endpoint refuses a Bcc header.
 
-`body` is typed plain text (greeting, paragraphs separated by blank lines, closing; no signature, no name). `bodyBlocks` is an array of paragraphs with text runs or bulleted/numbered lists, as shown in the [README example](../README.md#use-with-an-agent). Use one body field. The script escapes text, checks structure and size, and restricts links to safe http, https, and bare mailto addresses. `signatureId` is a sendAs email, display name, or `"none"`; omitted means the default Gmail signature. Recipient params accept a string (`"Name <a@b.com>, c@d.com"`) or an array of strings.
+`body` is typed plain text (greeting, paragraphs separated by blank lines, closing; no signature, no name). `bodyBlocks` is an array of paragraphs with text runs or bulleted/numbered lists, as shown in the [README example](../README.md#use-structured-gmail-formatting). Use one body field. The script escapes text, checks structure and size, and restricts links to safe http, https, and bare mailto addresses. `signatureId` is a sendAs email, display name, or `"none"`; omitted means the default Gmail signature. Recipient params accept a string (`"Name <a@b.com>, c@d.com"`) or an array of strings.
 
 ## Low-level actions (mirror the Node `MailProvider`)
 

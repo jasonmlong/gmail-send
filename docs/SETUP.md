@@ -20,6 +20,20 @@ Seeds a demo mailbox, drafts a reply into the vendor thread with the stored sign
 
 Other useful simulator commands:
 
+Set the provider explicitly before using this list. Otherwise, an `.env` that selects `appsscript` makes the general thread and draft commands operate on the real mailbox.
+
+PowerShell:
+
+```
+$env:GMAIL_SEND_PROVIDER = 'sim'
+```
+
+bash or zsh:
+
+```
+export GMAIL_SEND_PROVIDER=sim
+```
+
 ```
 npm run cli -- threads
 npm run cli -- thread <threadId>
@@ -103,7 +117,7 @@ Four things that are easy to get wrong here.
 - **Leave the URL and token out of this file.** They stay in `.env`, so the credential exists in one place. Only the provider is named here, so the config states which mailbox it talks to.
 - **Fully quit and reopen Desktop** to reload the config. Closing the window is not enough; the config is read only at startup.
 
-After updating the server code, fully quit and reopen Desktop again so it reloads the revised `draft_new`, `draft_reply`, `draft_forward`, and `update_draft` schemas. Ask Claude to use the `gmail-send` tool's `bodyBlocks` field for bold, text sizes, links, and real lists. For an existing draft, it can call `update_draft` with the draft ID and replacement `bodyBlocks`; a draft changed in Gmail outside this tool may need a new draft. The [README example](../README.md#use-with-an-agent) shows the block format.
+After updating the server code, fully quit and reopen Desktop again so it reloads the revised `draft_new`, `draft_reply`, `draft_forward`, and `update_draft` schemas. Ask Claude to use the `gmail-send` tool's `bodyBlocks` field for bold, text sizes, links, and real lists. For an existing draft, it can call `update_draft` with the draft ID and replacement `bodyBlocks`; a draft changed in Gmail outside this tool may need a new draft. The [README example](../README.md#use-structured-gmail-formatting) shows the block format.
 
 If the tools do not appear, the logs are at `%APPDATA%\Claude\logs\` (Settings, Developer, Open Logs Folder).
 
@@ -116,7 +130,7 @@ Local skill files are a Claude Code feature. Claude Desktop loads skills only fr
 
 So the drafting rules reach Desktop whether or not it ever gains local skill support. If you want the fuller skill there as well, add it as a skill on claude.ai and it will appear in Desktop.
 
-## 4. Direct Gmail API mode (optional)
+## 5. Direct Gmail API mode (optional)
 
 Only needed if you would rather hold Google credentials on the Node side.
 

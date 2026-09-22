@@ -137,3 +137,4 @@ Four independent adversarial passes before the first public deployment. Findings
 - [ ] T8.6 GitHub Actions: typecheck + tests on push
 - [x] T8.7 Audit reachable Git history, refresh dependencies, and prepare public README and agent guidance
 - [x] T8.8 Add Apache-2.0 as the open source license for reuse and contributions
+- [x] T8.9 Expand the root README and setup guide with separate Claude Desktop and OpenClaw topology, first-time and update instructions for Apps Script, local Windows setup, formatting examples, and verification steps
