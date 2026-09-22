@@ -77,6 +77,19 @@ Open Gmail: the draft sits inside the conversation with the real signature. Or r
 
 The profile also reports `deploymentVersion`. It must match `GMAIL_SEND_VERSION` in `apps-script/Api.js`; this checks the live `Api` revision, while the successful profile call also exercises `GmailAdapter`. It cannot prove that every editor file came from the same revision, so replace all five together. If an Apps Script action reports that a name `is not defined`, such as `CAPABILITIES is not defined`, copy all five files again and deploy a new web app version. Saving files or restarting the local MCP process does not update the `/exec` deployment.
 
+### If `profile` returns `Unauthorized`
+
+An `Unauthorized` JSON response comes from `doPost` after the request reaches the Apps Script code. It means the submitted token is missing, revoked, or absent from that project's token registry. An HTML sign-in page or HTTP access error points to the web app boundary.
+
+1. Open the Apps Script project that owns the exact `/exec` URL in this checkout's `.env`.
+2. Run `listTokens()` and inspect only the labels, capabilities, and state. Do not paste a token into chat or source control.
+3. For Claude Desktop, set `LABEL` in `mintDraftOnlyToken()` to a fresh label such as `claude-desktop-2`, run it, and immediately copy the one-time token into `GMAIL_SEND_APPS_SCRIPT_TOKEN` in this checkout's `.env`.
+4. Run `npm run cli -- profile`, then fully quit and reopen Claude Desktop after the CLI succeeds.
+
+If this project was upgraded directly from version 0.3.x and you intentionally want to keep its old primary token, run `setup()` once. It preserves and registers an existing `GMAIL_SEND_TOKEN`; it does not rotate it. A newly minted draft-only token is safer for an agent because it cannot send or change Gmail settings.
+
+Token registration and revocation use Script Properties and take effect immediately. They do not require another Apps Script deployment.
+
 7. Optionally narrow thread search results by running this in the editor.
 
 ```
