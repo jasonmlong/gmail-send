@@ -50,8 +50,9 @@ at runtime, don't hardcode the prefix):
 
 ## The sync manifest (how dedup + drift detection work)
 
-State lives in `.atlassian-sync/manifest.json` in the repo (commit it — the mapping must travel
-between machines). Shape:
+State lives in `.atlassian-sync/manifest.json` in the repo. In gmail-send this file and
+`.atlassian-sync.json` are ignored because they contain internal project metadata. Do not
+force-add them to the public repository. Shape:
 
 ```json
 {
@@ -92,8 +93,8 @@ manifest and reality disagree, reality wins — re-link and rewrite the manifest
    company-managed → find the Epic Link customfield). Record `epicStrategy` in config.
 3. Create (or locate) the Confluence **docs root page** and the **Session Log page**; record
    `rootPageId` and `session.handoffPageId`.
-4. Write `.atlassian-sync.json` and an empty `.atlassian-sync/manifest.json`. Add
-   `.atlassian-sync/manifest.json` is committed; nothing here holds secrets.
+4. Write `.atlassian-sync.json` and an empty `.atlassian-sync/manifest.json` locally.
+   Respect this repository's `.gitignore`; do not commit either file here.
 5. Do a first **Doc sync** dry run (report what *would* publish) before writing anything.
 
 Don't invent projects/spaces unless the user explicitly asks — prefer binding to ones that

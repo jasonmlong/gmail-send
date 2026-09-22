@@ -27,7 +27,7 @@ has a `.atlassian-sync.json`.
 
 ## What travels automatically (no per-machine setup)
 
-- Each repo's **`.atlassian-sync.json`** binding (committed) — `git pull` brings it.
+- In gmail-send, `.atlassian-sync.json` and `.atlassian-sync/` are ignored. Recreate or transfer them privately for another machine; do not force-add internal project metadata to this public repository.
 - Any **project-level companion skill** (e.g. `command-center-source-of-truth`) lives in the
   repo's own `skills/` — also via `git pull`.
 - Working state moves via the **Session Log** Confluence page — start a session by asking for

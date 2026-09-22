@@ -185,8 +185,9 @@ function restoreSignature() {
 }
 
 /**
- * Narrow what the API can read. The value is Gmail search syntax ANDed into
- * every search, so it also binds anyone calling the endpoint directly.
+ * Narrow thread search results. The value is Gmail search syntax ANDed into
+ * listThreads searches, including direct endpoint calls. Direct lookups by
+ * ID and draft reads are not constrained by this filter.
  */
 function setSearchScope(query) {
   PropertiesService.getScriptProperties().setProperty('GMAIL_SEND_QUERY_SCOPE', query || '');
@@ -215,7 +216,7 @@ function showSettings() {
   Logger.log('version:              ' + GMAIL_SEND_VERSION);
   Logger.log('allowSend:            ' + (p.getProperty('GMAIL_SEND_ALLOW_SEND') === '1' ? 'ENABLED' : 'disabled'));
   Logger.log('allowSettingsWrite:   ' + (p.getProperty('GMAIL_SEND_ALLOW_SETTINGS_WRITE') === '1' ? 'ENABLED' : 'disabled'));
-  Logger.log('searchScope:          ' + (p.getProperty('GMAIL_SEND_QUERY_SCOPE') || '(none, whole mailbox)'));
+  Logger.log('searchScope:          ' + (p.getProperty('GMAIL_SEND_QUERY_SCOPE') || '(none, unfiltered search)'));
   Logger.log('signaturePlacement:   ' + (p.getProperty('GMAIL_SEND_SIGNATURE_PLACEMENT') || 'after-quote'));
   Logger.log('');
   listTokens();

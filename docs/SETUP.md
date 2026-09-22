@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Node 20 or newer (built on Node 24), npm.
+Node 22.12, 24, or 26 and newer, plus npm. The current dependencies do not support Node 20.
 
 ```
 npm install
@@ -59,13 +59,13 @@ npm run cli -- draft reply --thread <id> --body-file reply.txt
 
 Open Gmail: the draft sits inside the conversation with the real signature. Or run `testDraftLatestInbox()` in the editor for the same check without Node.
 
-7. Recommended once it works: narrow what the deployment can read, by running this in the editor.
+7. Optionally narrow thread search results by running this in the editor.
 
 ```
 setSearchScope('-in:spam -in:trash newer_than:180d')
 ```
 
-The scope is combined into every search inside the script, so it binds anyone calling the endpoint, not just this client.
+The scope is combined into thread searches inside the script, including searches made by direct endpoint callers. It does not restrict `getThread`, `getMessage`, draft listing, or drafting by a known ID. A token with read access can still reach mail outside the search results, so this is not a mailbox access boundary.
 
 Three capabilities are off by default and can only be armed from the editor: sending (`setAllowSend`), writing the Gmail signature (`setAllowSettingsWrite`), and deleting drafts the tool did not create, which is always refused. Leave sending off unless you have a specific reason. If `signatures push` fails saying settings writes are disabled, that is why.
 

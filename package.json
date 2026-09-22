@@ -1,11 +1,16 @@
 {
   "name": "gmail-send",
   "version": "0.1.0",
+  "license": "Apache-2.0",
   "description": "Gmail-identical drafting engine, simulator, and MCP server so an AI agent can draft emails and replies inside Gmail with real signatures and proper threading.",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=20" },
-  "bin": { "gmail-send": "./dist/cli/index.js" },
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
+  "bin": {
+    "gmail-send": "./dist/cli/index.js"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -21,14 +26,14 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "googleapis": "^148.0.0",
+    "googleapis": "^181.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.2",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^3.1.0"
+    "vitest": "^5.0.1"
   }
 }

@@ -18,7 +18,7 @@ A remote host should get its own token, never a copy of the owner's. Use `mintDr
 
 Requirements on the host:
 
-- Node 20 or newer
+- Node 22.12, 24, or 26 and newer
 - Outbound HTTPS to `script.google.com` and `script.googleusercontent.com`. Apps Script answers with a redirect to the second domain, so an egress allowlist naming only the first will fail in a confusing way.
 - Nothing inbound. The server speaks MCP over stdio and listens on no port.
 
@@ -96,11 +96,11 @@ For a remote host this is easy to miss, because the path that works on the owner
 
 ## What this host can and cannot do
 
-Can: read the mailbox within whatever search scope the deployment sets, and stage drafts in it.
+Can: read mail and stage drafts. A configured search scope filters thread searches, but direct lookups by ID and draft listing can still reach outside those results.
 
 Cannot: send anything, change the Gmail signature, or delete drafts a person wrote by hand.
 
-Worth being clear-eyed about the remaining exposure. A draft-only token still reads mail, and an agent steered by a malicious inbound message can stage a convincing forward of a sensitive thread addressed to anyone. It cannot deliver it. The controls that matter here are the search scope, set with `setSearchScope()` in the editor, and a human reading the recipients before pressing Send.
+Worth being clear-eyed about the remaining exposure. A draft-only token still reads mail, and an agent steered by a malicious inbound message can stage a convincing forward of a sensitive thread addressed to anyone. It cannot deliver it. `setSearchScope()` narrows search discovery only. Give this token to an agent only if it may read the mailbox, and have a human read recipients before pressing Send.
 
 ## If it breaks
 

@@ -6,13 +6,13 @@ Deployment assumption throughout: web app, execute as the mailbox owner, access 
 
 ## Status
 
-Everything under "Blocks the deploy" and "Fix before pointing an agent at a live mailbox" was fixed on the same day, along with the pre-commit item and the correctness bugs. The original proof of concept for S1 now produces a single malformed recipient instead of a forged header. Regression tests live in `tests/security.test.ts`, and `tests/appsscript-endpoint.test.ts` exercises the real endpoint files against stubbed Google services, which closes the test gap noted below.
+The original findings were addressed except for full read scoping in S7. The search filter implemented there applies to `listThreads` only. Direct `getThread` and `getMessage` calls, draft listing, and drafting by known IDs remain outside that filter. Treat any token with `read` capability as having broad mailbox read access. The original proof of concept for S1 now produces a single malformed recipient instead of a forged header. Regression tests live in `tests/security.test.ts`, and `tests/appsscript-endpoint.test.ts` exercises the real endpoint files against stubbed Google services, which closes the test gap noted below.
 
 What was deliberately not changed, and why:
 
 - **Anonymous access stays.** Restricting the deployment to signed-in Google accounts would remove the anonymous threat model, but the Node client authenticates with a token rather than a Google identity, so it would stop working. Revisit if the client ever gains one.
 - **Raw message creation stays**, because it is the Node client's own path. Instead the endpoint now refuses any raw message carrying a header the renderer does not produce, which removes the arbitrary-header primitive while keeping the client working.
-- **The read surface is still broad by default.** A scope now exists and is enforced inside the script; it is empty until the owner sets one.
+- **The read surface is still broad.** A scope can filter thread searches inside the script, but it does not constrain direct lookups or draft reads, even when the owner sets one.
 
 ## Blocks the deploy
 
@@ -75,7 +75,7 @@ The Gmail drafts delete call bypasses Trash. The tool accepts any draft id, and 
 
 Arbitrary Gmail search, any thread, any message, full text and HTML. No label allowlist, no date window, no exclusion of Spam or Trash.
 
-**Fix.** A search scope held in Script Properties and combined into every search inside the Apps Script, so it binds direct HTTP callers and not merely the Node client. Something like excluding spam and trash and limiting to recent mail converts "the agent can read my entire history" into "the agent can read recent work mail".
+**Current state.** A search scope held in Script Properties is combined into `listThreads` searches inside the Apps Script, so it binds direct HTTP callers for search discovery. It does not constrain direct `getThread` or `getMessage` requests, `listDrafts`, `getDraft`, or high-level drafting by a known ID. The token must still be treated as a broad mailbox-read credential. Full read scoping remains unresolved.
 
 ### S8. Recipient controls
 

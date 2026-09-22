@@ -13,6 +13,11 @@ preview/
 # Local signature library: holds real names, phone numbers and signature
 # tracking ids. Ship config/signatures.example.json instead.
 config/signatures.json
+config/style-guide.md
+config/style.local.json
+
+# clasp stores the account's Apps Script project id here.
+.clasp.json
 
 # Internal work tracking: Atlassian binding (cloud id, site) and the session
 # log. Useful locally, not for a public repo.

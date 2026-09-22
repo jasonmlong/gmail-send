@@ -78,7 +78,7 @@ The same `src/core` renderer runs in Node and inside Apps Script (bundled). Apps
 | Preview pages | `preview/*.html` | no |
 | Ground-truth notes | `docs/GMAIL-MARKUP.md` | yes |
 | Backlog mirrored to Jira | `docs/build-plan/BACKLOG.md` | yes |
-| Atlassian binding | `.atlassian-sync.json`, `.atlassian-sync/manifest.json` | yes |
+| Atlassian binding | `.atlassian-sync.json`, `.atlassian-sync/manifest.json` | no (git-ignored) |
 
 ## Key flows
 

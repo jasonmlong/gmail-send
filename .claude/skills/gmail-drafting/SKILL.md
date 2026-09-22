@@ -5,7 +5,7 @@ description: Draft email in Gmail that looks exactly like the account owner type
 
 # Drafting email in Gmail
 
-The `gmail-send` MCP server writes drafts into a real Gmail mailbox that are byte-identical to mail typed in Gmail's own compose box: the quoted conversation, the "On &lt;date&gt; &lt;person&gt; wrote:" line, the account's real signature, the right recipients and the threading headers.
+The `gmail-send` MCP server writes drafts using the Gmail compose structures documented in `docs/GMAIL-MARKUP.md`: the quoted conversation, the "On &lt;date&gt; &lt;person&gt; wrote:" line, the account's real signature, the recipients and the threading headers. Offline tests pin the observed samples; they do not prove every Gmail variant is identical.
 
 > Local skill files are a Claude Code feature. Claude Desktop does not load them, so the essential rules below are duplicated into the server's MCP `instructions` and into the tool descriptions, which every client reads. If you change the workflow here, change it there too (`src/mcp/server.ts`).
 

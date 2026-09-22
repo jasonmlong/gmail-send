@@ -98,7 +98,7 @@ Four independent adversarial passes before the first public deployment. Findings
 - [x] T10.7 MCP `create_signature` writes only to the local library; pushing to Gmail settings is a deliberate human CLI action
 - [x] T10.8 Draft deletion restricted to drafts this tool created, in the endpoint, the MCP tool and the CLI
 - [x] T10.9 Raw messages filtered to the headers the renderer produces, removing the arbitrary-header primitive
-- [x] T10.10 Search scope enforced inside the Apps Script so it binds direct HTTP callers (`setSearchScope`)
+- [x] T10.10 Search scope applied to `listThreads` inside the Apps Script, including direct HTTP callers (`setSearchScope`)
 - [x] T10.11 Bcc removed from agent-facing schemas; recipients removed from `update_draft` so an approved draft cannot be re-addressed
 - [x] T10.12 Recipients whose domain is new to the thread are flagged back to the agent
 - [x] T10.13 `send_draft` registered only when sending is enabled; the meaningless `confirm` parameter removed
@@ -108,12 +108,14 @@ Four independent adversarial passes before the first public deployment. Findings
 - [x] T10.17 `config/signatures.json` git-ignored; `config/signatures.example.json` shipped
 - [x] T10.18 Regression tests for every finding (`tests/security.test.ts`) and the first real endpoint tests, running the actual Apps Script files against stubbed Google services (`tests/appsscript-endpoint.test.ts`)
 - [x] T10.19b Per-token capabilities (read / draft / send / settings), enforced in the dispatcher and combined with the global switches, so a credential issued to a remote agent cannot send regardless of any setting (`apps-script/Api.js`, `apps-script/Setup.js`)
-- [x] T10.19c Tokens stored as SHA-256 hashes and shown once at mint time; mint, list, revoke and purge from the editor only
+- [x] T10.19c Separately minted tokens stored as SHA-256 hashes and shown once at mint time; mint, list, revoke and purge from the editor only. The primary token is still stored in plaintext for `setup()` reprint.
 - [x] T10.19d MCP server probes the backend and advertises a send tool only when the credential in use can actually send (`src/mcp/server.ts`)
 - [ ] T10.19 Decide whether the deployment can move off anonymous access, which needs the Node client to carry a Google identity
-- [ ] T10.20 Set a search scope on the deployment once it is live
+- [ ] T10.20 Set a search discovery filter on the deployment once it is live
 - [ ] T10.21 Bind human approval to a content hash if sending is ever enabled, so a draft cannot be re-rendered between review and send
 - [ ] T10.22 Re-run the z.ai pass once that account has balance
+- [ ] T10.23 Enforce the configured read scope across direct message/thread lookups, draft reads, and drafting by known ID, or replace it with a narrower access design
+- [ ] T10.24 Store the primary token as a hash and show it only once, removing its plaintext Script Property
 
 ## E9 Signature and timezone fidelity (from the review)
 
@@ -128,5 +130,7 @@ Four independent adversarial passes before the first public deployment. Findings
 - [x] T8.2 AGENTS.md and CLAUDE.md
 - [x] T8.3 `.atlassian-sync.json` binding prepared (keys to fill), skills installed in `.claude/skills`
 - [ ] T8.4 Create Jira project + Confluence space, fill keys, run atlassian-sync init and log this backlog (blocked: needs the project created)
-- [ ] T8.5 Initial git commit and remote
+- [x] T8.5 Initial git commit and remote
 - [ ] T8.6 GitHub Actions: typecheck + tests on push
+- [x] T8.7 Audit reachable Git history, refresh dependencies, and prepare public README and agent guidance
+- [x] T8.8 Add Apache-2.0 as the open source license for reuse and contributions

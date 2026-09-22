@@ -113,7 +113,7 @@ const HELP = `gmail-send - Gmail-identical drafting for AI agents
   style
   sim seed | sim reset | sim demo [--open] | sim receive --from ".." --subject ".." --body ".." [--thread id]
 
-Environment: see .env.example (GMAIL_SEND_PROVIDER=sim|gmail, GMAIL_SEND_ALLOW_SEND, GMAIL_SEND_TIMEZONE, ...)`;
+Environment: see .env.example (GMAIL_SEND_PROVIDER=sim|appsscript|gmail, GMAIL_SEND_ALLOW_SEND, GMAIL_SEND_TIMEZONE, ...)`;
 
 export async function run(argv: string[]): Promise<void> {
   const { cmd, flags } = parseArgs(argv);

@@ -87,7 +87,7 @@ Simulation and preview
 Safety
 
 30. Sending is disabled by default; `send_draft` refuses unless `GMAIL_SEND_ALLOW_SEND=1`. Drafts stay in Gmail for a person to send. Built.
-31. OAuth token and client secret are git-ignored; scopes limited to gmail.modify and gmail.settings.basic. Built.
+31. OAuth token and client secret are git-ignored; scopes include gmail.modify, gmail.settings.basic, and calendar.readonly for the timezone. Built.
 32. Every draft response includes lint findings so the agent can fix voice problems before a human sees the draft. Built.
 
 EmailDrafter integration
@@ -131,7 +131,7 @@ The MCP server and CLI pick the mode with `GMAIL_SEND_PROVIDER`. The Apps Script
 
 Verified for the Apps Script path: the Gmail API's sendAs resource returns the stored signature ("An optional HTML signature that is included in messages composed with this alias in the Gmail web UI"), and Apps Script's Advanced Gmail Service exposes the same resource, so the script reads the signature Gmail shows in Settings with no extra setup. The timezone is read from the user's primary Google Calendar (the owner's reports America/Cancun, which is the clock his reply sample used). Apps Script's V8 has no timezone data in `Intl`, so the renderer routes date formatting through hooks the script backs with `Utilities.formatDate`.
 
-What EmailDrafter had that the lightweight version drops on purpose: tiers, promo codes, encrypted key caching, onboarding cards, AI calls inside the script. The AI lives with the agent; the script only reads mail and writes drafts.
+What EmailDrafter had that the lightweight version drops on purpose: tiers, promo codes, encrypted key caching, onboarding cards, AI calls inside the script. The AI lives with the agent. The script normally reads mail and writes drafts; sending and Gmail signature changes are separate gated capabilities.
 
 ## 4. Decisions made (and why)
 
