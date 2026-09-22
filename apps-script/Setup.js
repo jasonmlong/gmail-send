@@ -8,6 +8,12 @@
 // carry an editable constant on the first line. Edit it, then Run.
 // ==========================================
 
+function setupCapabilities_() {
+  // Keep this aligned with ACTIONS in Api.gs and the no-auth fallback in
+  // GmailAdapter.gs. Endpoint tests compare all three vocabularies.
+  return ['read', 'draft', 'send', 'settings'];
+}
+
 /**
  * Run once after pasting the project in. Normal code updates use a new web app
  * deployment version and do not need setup() again.
@@ -25,7 +31,7 @@ function setup() {
   // The primary token is kept in plaintext so this function can reprint it.
   // Every other token is stored as a hash and shown only once, at mint time.
   var tokens = loadTokens_();
-  tokens[hashToken_(token)] = { label: 'primary', caps: ['read', 'draft', 'send', 'settings'], created: new Date().toISOString(), primary: true };
+  tokens[hashToken_(token)] = { label: 'primary', caps: setupCapabilities_(), created: new Date().toISOString(), primary: true };
   saveTokens_(tokens);
 
   if (!props.getProperty('GMAIL_SEND_ALLOW_SEND')) props.setProperty('GMAIL_SEND_ALLOW_SEND', '0');
@@ -53,8 +59,9 @@ function newSecret_() {
 
 function mintToken_(label, caps) {
   if (!label) throw new Error('A label is required, so you can tell tokens apart later.');
+  var allowed = setupCapabilities_();
   for (var i = 0; i < caps.length; i++) {
-    if (CAPABILITIES.indexOf(caps[i]) === -1) throw new Error('Unknown capability: ' + caps[i] + '. Valid: ' + CAPABILITIES.join(', '));
+    if (allowed.indexOf(caps[i]) === -1) throw new Error('Unknown capability: ' + caps[i] + '. Valid: ' + allowed.join(', '));
   }
   var tokens = loadTokens_();
   for (var h in tokens) {
@@ -153,7 +160,7 @@ function rotateToken() {
   if (old) delete tokens[hashToken_(old)];
   var secret = newSecret_();
   props.setProperty('GMAIL_SEND_TOKEN', secret);
-  tokens[hashToken_(secret)] = { label: 'primary', caps: ['read', 'draft', 'send', 'settings'], created: new Date().toISOString(), primary: true };
+  tokens[hashToken_(secret)] = { label: 'primary', caps: setupCapabilities_(), created: new Date().toISOString(), primary: true };
   saveTokens_(tokens);
   Logger.log('New primary token: ' + secret);
   Logger.log('Other tokens are unaffected. Update GMAIL_SEND_APPS_SCRIPT_TOKEN in .env.');

@@ -119,6 +119,7 @@ Four independent adversarial passes before the first public deployment. Findings
 - [ ] T10.23 Enforce the configured read scope across direct message/thread lookups, draft reads, and drafting by known ID, or replace it with a narrower access design
 - [ ] T10.24 Store the primary token as a hash and show it only once, removing its plaintext Script Property
 - [x] T10.25 Review structured formatting inputs, link visibility, direct HTTP validation, draft-cache freshness, Apps Script metadata limits, Bcc, and draft ownership (`docs/FORMATTING-SECURITY-REVIEW.md`)
+- [x] T10.26 Remove the cross-file capabilities global, report the deployed Apps Script version through `profile`, and regress the editor-call fallback (`apps-script/Api.js`, `apps-script/GmailAdapter.js`, `apps-script/Setup.js`, `tests/appsscript-endpoint.test.ts`)
 
 ## E9 Signature and timezone fidelity (from the review)
 

@@ -73,6 +73,8 @@ npm run cli -- draft reply --thread <id> --body-file reply.txt
 
 Open Gmail: the draft sits inside the conversation with the real signature. Or run `testDraftLatestInbox()` in the editor for the same check without Node.
 
+The profile also reports `deploymentVersion`. It must match `GMAIL_SEND_VERSION` in `apps-script/Api.js`; this checks the live `Api` revision, while the successful profile call also exercises `GmailAdapter`. It cannot prove that every editor file came from the same revision, so replace all five together. If an Apps Script action reports that a name `is not defined`, such as `CAPABILITIES is not defined`, copy all five files again and deploy a new web app version. Saving files or restarting the local MCP process does not update the `/exec` deployment.
+
 7. Optionally narrow thread search results by running this in the editor.
 
 ```

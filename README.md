@@ -95,14 +95,16 @@ Use this after pulling a new gmail-send release or changing anything under `src/
    ```
 
 2. Open the existing Claude Desktop Apps Script project.
-3. Replace the editor contents of `Api`, `GmailAdapter`, `Drafting`, `Setup`, and `GmailSendCore` with the matching files from this repository. Update `appsscript.json` if its repository version changed.
+3. Replace the editor contents of `Api`, `GmailAdapter`, `Drafting`, `Setup`, and `GmailSendCore` with the matching files from this repository. Copy all five together, even when only one appears to have changed, so the deployment cannot combine incompatible revisions. Update `appsscript.json` if its repository version changed.
 4. Save the project. If `appsscript.json` changed, run `selfTest()` in the editor and approve any new scopes before deploying. The self-test reads and renders but does not save or send mail.
 5. Choose **Deploy > Manage deployments**, edit the existing web app deployment, select **New version**, and deploy it.
 6. Keep the existing `/exec` URL and token. Do not rerun `setup()` or mint a new token for a normal code update. `setup()` manages credentials and initial switches; deploying a code version does not require it.
 7. Run `showSettings()` and confirm sending and settings writes are disabled.
-8. From the configured Windows checkout, run `npm run cli -- profile`. This confirms that the existing `/exec` URL serves the new working deployment and can still access the expected account.
+8. From the configured Windows checkout, run `npm run cli -- profile`. This confirms that the existing `/exec` URL serves the expected `Api` revision and a working `GmailAdapter`, and that it can still access the expected account. Its `deploymentVersion` must match `GMAIL_SEND_VERSION` near the top of `apps-script/Api.js`. This value identifies the `Api` revision, so copying all five files in step 3 remains required.
 
 Saving code in the Apps Script editor is not enough for the existing `/exec` URL. The web app must be updated to a new deployed version.
+
+If an Apps Script action reports that a name `is not defined`, such as `CAPABILITIES is not defined`, the project probably contains files from different revisions or the `/exec` URL still serves an older version. Copy all five code files again, save them, deploy a **New version**, and check `deploymentVersion` through `npm run cli -- profile`. Restarting Claude Desktop alone does not update Apps Script.
 
 ## Configure this Windows machine for Claude Desktop
 

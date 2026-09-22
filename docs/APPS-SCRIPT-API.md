@@ -42,7 +42,7 @@ A refused capability returns a specific error, since the caller already authenti
 This token cannot sendDraft. It holds [read, draft] and that action needs "send".
 ```
 
-`profile` reports the calling token's own view: `tokenLabel`, `capabilities`, `canSend` and `canWriteSettings`, the last two already combining the capability with the global switch. The MCP server uses `canSend` to decide whether to advertise a send tool at all.
+`profile` reports the calling token's own view: `tokenLabel`, `capabilities`, `canSend` and `canWriteSettings`, the last two already combining the capability with the global switch. It also returns `deploymentVersion`, which identifies the `Api` revision serving the configured `/exec` URL. The MCP server uses `canSend` to decide whether to advertise a send tool at all.
 
 ## Capability switches
 
@@ -75,7 +75,7 @@ No action accepts `bcc` or `addBcc`, and the raw-draft endpoint refuses a Bcc he
 
 | action | params | result |
 |---|---|---|
-| `profile` | | `{email, name?, sendAs:[{email,name?,isDefault,replyTo?}], timeZone}` |
+| `profile` | | `{email, name?, sendAs:[{email,name?,isDefault,replyTo?}], timeZone, tokenLabel, capabilities, canSend, canWriteSettings, deploymentVersion}` |
 | `listThreads` | `query?` (Gmail search), `max?` | `[{id, subject, snippet, lastDate, messageCount, participants[], labelIds}]` |
 | `getThread` | `threadId` | `{id, messages: Message[]}` |
 | `getMessage` | `messageId` | `Message` |
@@ -97,4 +97,5 @@ No action accepts `bcc` or `addBcc`, and the raw-draft endpoint refuses a Bcc he
 - `Writing Gmail settings is disabled on this deployment...`: run `setAllowSettingsWrite(true)` in the editor.
 - `Refusing to delete draft X: gmail-send did not create it...`
 - `Header not permitted in a raw draft: x-whatever`
+- `<name> is not defined`, including `CAPABILITIES is not defined`: the Apps Script project probably contains files from different revisions, or the `/exec` deployment still serves an older revision. Replace all five code files from one checkout and deploy a new version.
 - Any Gmail error text from Apps Script is passed through in `error` and also written to the script's logs.
