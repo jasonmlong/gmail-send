@@ -5,10 +5,12 @@
 Node 22.12, 24, or 26 and newer, plus npm. The current dependencies do not support Node 20.
 
 ```
-npm install
+npm ci --include=dev
 npm test          # all offline
 npm run typecheck
 ```
+
+The MCP and CLI run TypeScript through `tsx`, which is a production dependency because clients invoke it directly. `--include=dev` is still required here when `NODE_ENV=production` because validation also needs TypeScript and Vitest. Keep npm lifecycle scripts enabled: `tsx` needs `esbuild`'s install script to prepare the executable for the current platform.
 
 ## 1. Try it offline (simulator)
 

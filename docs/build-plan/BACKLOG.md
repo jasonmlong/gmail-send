@@ -139,3 +139,4 @@ Four independent adversarial passes before the first public deployment. Findings
 - [x] T8.7 Audit reachable Git history, refresh dependencies, and prepare public README and agent guidance
 - [x] T8.8 Add Apache-2.0 as the open source license for reuse and contributions
 - [x] T8.9 Expand the root README and setup guide with separate Claude Desktop and OpenClaw topology, first-time and update instructions for Apps Script, local Windows setup, formatting examples, and verification steps
+- [x] T8.10 Make `tsx` a production dependency, document production-safe installs, and regress the MCP launcher's package classification

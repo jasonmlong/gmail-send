@@ -57,7 +57,7 @@ Do not paste files from one repository into the other project's script, and do n
 The current dependencies require Node.js 22.12, 24, 26, or newer, plus npm.
 
 ```powershell
-npm ci
+npm ci --include=dev
 npm test
 npm run typecheck
 npm run cli -- sim demo --open
@@ -106,7 +106,7 @@ Use this after pulling a new gmail-send release or changing anything under `src/
 1. In this repository, run:
 
    ```powershell
-   npm ci
+   npm ci --include=dev
    npm run build:apps-script
    npm test
    npm run typecheck
@@ -131,7 +131,7 @@ If an Apps Script action reports that a name `is not defined`, such as `CAPABILI
    ```powershell
    git clone https://github.com/jasonmlong/gmail-send.git
    cd gmail-send
-   npm ci
+   npm ci --include=dev
    npm test
    npm run typecheck
    Copy-Item .env.example .env
@@ -185,7 +185,7 @@ Claude Desktop does not load this repository's local `SKILL.md`. The MCP server 
 ```powershell
 cd C:\Users\YOUR_NAME\Documents\GitHub\gmail-send
 git pull --ff-only
-npm ci
+npm ci --include=dev
 npm test
 npm run typecheck
 ```
