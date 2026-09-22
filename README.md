@@ -1,6 +1,24 @@
 # gmail-send
 
-Create Gmail drafts from Claude Desktop, Claude Code, another MCP client, the CLI, or a Node application. The renderer builds the HTML, plain text, recipients, quote, signature, and threading headers observed in Gmail's web compose. A person reviews and sends the resulting draft in Gmail.
+## The problem we wanted to solve
+
+An LLM can write the words in an email, but a basic email connector does not reliably create the draft the way Gmail does. The content may be good while the actual message still looks unfinished or behaves incorrectly when the recipient opens it.
+
+Common problems include:
+
+- Bold, italic, text sizes, links, and lists arrive as plain text or visible Markdown markers instead of standard Gmail formatting.
+- Bullets are typed as dashes rather than stored as real bulleted lists.
+- The mailbox's real Gmail signature is missing, duplicated, or placed on the wrong side of the quoted conversation.
+- Replies lose Gmail's attribution line, quoted history, threading headers, or subject prefix and appear as new conversations.
+- Reply-all recipients, aliases, and Cc fields are easy to calculate incorrectly.
+- Attribution times use the wrong timezone.
+- Editing a draft can flatten its formatting or silently restore stale recipients and subjects.
+- A connector may expose sending when the intended workflow is to create a draft for human review.
+- The message reaches Gmail without a readable plain-text alternative, a preview, or a style check.
+
+gmail-send was built to solve those problems. The LLM supplies the writing through plain text or structured formatting blocks. A deterministic renderer handles Gmail's formatting, signature, recipients, quoting, threading, and plain-text alternative, then stores the result as a draft for a person to review and send.
+
+You can use it from Claude Desktop, Claude Code, another MCP client, the CLI, or a Node application. The renderer follows the HTML and plain-text shapes observed in Gmail's web compose.
 
 The recommended real-mailbox setup has two parts:
 
