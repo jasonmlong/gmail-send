@@ -253,7 +253,7 @@ var ALLOWED_RAW_HEADERS = {
   from: true,
   to: true,
   cc: true,
-  bcc: true,
+  // Bcc is hidden when a human sends a staged draft, so it is never accepted.
   'reply-to': true,
   'in-reply-to': true,
   references: true,
@@ -288,6 +288,7 @@ function createDraftFromRaw_(raw, threadId) {
 }
 
 function updateDraftFromRaw_(draftId, raw, threadId) {
+  if (!loadMeta_(draftId)) throw new Error('Refusing to update draft ' + draftId + ': gmail-send did not create it. Edit it in Gmail if that is what you meant.');
   var resource = { message: { raw: rawToWebSafe_(assertSafeRaw_(raw)) } };
   if (threadId) resource.message.threadId = threadId;
   var updated = Gmail.Users.Drafts.update(resource, 'me', draftId);

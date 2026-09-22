@@ -18,6 +18,8 @@ Legend: `[x]` done and tested in this repo, `[ ]` open, `(blocked: ...)` needs s
 - [x] T1.10 Golden tests pinned to the observed Gmail samples (`tests/compose.test.ts`, `tests/html.test.ts`, `tests/mime.test.ts`)
 - [ ] T1.11 Fidelity diff tool: render the same inputs as a real Gmail-sent message and diff HTML/text
 - [ ] T1.12 Inline image (cid) support in bodies and signatures
+- [x] T1.13 Structured Gmail formatting for MCP and Apps Script high-level drafts: emphasis, links, sizes, lists, plain-text alternative, update preservation, and offline MCP regression tests (`src/core/rich-body.ts`, `tests/rich-body.test.ts`)
+- [ ] T1.14 Compare structured formatting with a fresh Gmail web compose sample and document any serialization differences
 
 ## E2 Signatures
 
@@ -116,6 +118,7 @@ Four independent adversarial passes before the first public deployment. Findings
 - [ ] T10.22 Re-run the z.ai pass once that account has balance
 - [ ] T10.23 Enforce the configured read scope across direct message/thread lookups, draft reads, and drafting by known ID, or replace it with a narrower access design
 - [ ] T10.24 Store the primary token as a hash and show it only once, removing its plaintext Script Property
+- [x] T10.25 Review structured formatting inputs, link visibility, direct HTTP validation, draft-cache freshness, Apps Script metadata limits, Bcc, and draft ownership (`docs/FORMATTING-SECURITY-REVIEW.md`)
 
 ## E9 Signature and timezone fidelity (from the review)
 

@@ -62,12 +62,14 @@ Dates travel as ISO 8601 strings. Addresses are `{name?, email}`. A `Message` is
 
 | action | params | result |
 |---|---|---|
-| `draftReply` | `threadId` or `messageId`, `body`, `replyAll?`, `to?`, `cc?`, `addCc?`, `bcc?`, `addBcc?`, `signatureId?` | `{draftId, threadId, mode, subject, from, to, cc, bcc, inReplyTo, text, htmlLength}` |
-| `draftNew` | `to`, `subject`, `body`, `cc?`, `bcc?`, `signatureId?` | same |
-| `draftForward` | `messageId`, `to`, `body?`, `cc?`, `bcc?`, `includeAttachments?`, `signatureId?` | same |
-| `redraft` | `draftId`, `body?`, `subject?`, `to?`, `cc?`, `bcc?`, `replyAll?`, `signatureId?` | same (re-renders a draft this API created) |
+| `draftReply` | `threadId` or `messageId`, `body` or `bodyBlocks`, `replyAll?`, `to?`, `cc?`, `addCc?`, `signatureId?` | `{draftId, threadId, mode, subject, from, to, cc, bcc, inReplyTo, text, htmlLength}` |
+| `draftNew` | `to`, `subject`, `body` or `bodyBlocks`, `cc?`, `signatureId?` | same |
+| `draftForward` | `messageId`, `to`, `body?` or `bodyBlocks?`, `cc?`, `includeAttachments?`, `signatureId?` | same |
+| `redraft` | `draftId`, `body?` or `bodyBlocks?`, `subject?`, `to?`, `cc?`, `replyAll?`, `signatureId?` | same (re-renders a draft this API created) |
 
-`body` is the typed plain text (greeting, paragraphs separated by blank lines, closing; no signature, no name). `signatureId` is a sendAs email, display name, or `"none"`; omitted means the default Gmail signature. Recipient params accept a string (`"Name <a@b.com>, c@d.com"`) or an array of strings.
+No action accepts `bcc` or `addBcc`, and the raw-draft endpoint refuses a Bcc header.
+
+`body` is typed plain text (greeting, paragraphs separated by blank lines, closing; no signature, no name). `bodyBlocks` is an array of paragraphs with text runs or bulleted/numbered lists, as shown in the [README example](../README.md#use-with-an-agent). Use one body field. The script escapes text, checks structure and size, and restricts links to safe http, https, and bare mailto addresses. `signatureId` is a sendAs email, display name, or `"none"`; omitted means the default Gmail signature. Recipient params accept a string (`"Name <a@b.com>, c@d.com"`) or an array of strings.
 
 ## Low-level actions (mirror the Node `MailProvider`)
 

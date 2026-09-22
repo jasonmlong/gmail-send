@@ -75,7 +75,7 @@ Full deployment notes and security caveats: [../apps-script/README.md](../apps-s
 
 `.mcp.json` registers the server as `gmail-send`, pinned to the simulator. Environment variables set there win over `.env`, so Claude Code stays in the sandbox until you change that file deliberately.
 
-Alongside it, `.claude/skills/gmail-drafting/SKILL.md` teaches the drafting workflow: read the style guide, read the thread, write plain text, lint, then draft. Claude Code loads it automatically.
+Alongside it, `.claude/skills/gmail-drafting/SKILL.md` teaches the drafting workflow: read the style guide and thread, write plain text or structured formatting, lint the visible words, then draft. Claude Code loads it automatically.
 
 ## 4. Use it from Claude Desktop
 
@@ -102,6 +102,8 @@ Four things that are easy to get wrong here.
 - **There is no working-directory setting**, and the process does not start in this repo. That is fine: the server locates its own `.env` and config relative to its own file, not the working directory.
 - **Leave the URL and token out of this file.** They stay in `.env`, so the credential exists in one place. Only the provider is named here, so the config states which mailbox it talks to.
 - **Fully quit and reopen Desktop** to reload the config. Closing the window is not enough; the config is read only at startup.
+
+After updating the server code, fully quit and reopen Desktop again so it reloads the revised `draft_new`, `draft_reply`, `draft_forward`, and `update_draft` schemas. Ask Claude to use the `gmail-send` tool's `bodyBlocks` field for bold, text sizes, links, and real lists. For an existing draft, it can call `update_draft` with the draft ID and replacement `bodyBlocks`; a draft changed in Gmail outside this tool may need a new draft. The [README example](../README.md#use-with-an-agent) shows the block format.
 
 If the tools do not appear, the logs are at `%APPDATA%\Claude\logs\` (Settings, Developer, Open Logs Folder).
 

@@ -252,6 +252,16 @@ describe('Apps Script endpoint', () => {
     expect(res.error).toBe('Header not permitted in a raw draft: x-forward-to');
   });
 
+  it('refuses Bcc and cannot update a draft the endpoint did not create', () => {
+    const bcc = post(ctx, { token, action: 'createDraft', raw: 'Subject: x\r\nTo: a@b.com\r\nBcc: hidden@attacker.example\r\n\r\nbody' });
+    expect(bcc.error).toBe('Header not permitted in a raw draft: bcc');
+    const highLevel = post(ctx, { token, action: 'draftNew', to: 'a@b.com', bcc: 'hidden@attacker.example', subject: 'x', body: 'Hello.' });
+    expect(highLevel.ok).toBe(true);
+    expect(highLevel.result.bcc).toEqual([]);
+    const overwrite = post(ctx, { token, action: 'updateDraft', draftId: 'rHUMAN', raw: 'Subject: x\r\nTo: a@b.com\r\n\r\nbody' });
+    expect(overwrite.error).toMatch(/did not create it/);
+  });
+
   it('accepts a folded header line as a continuation rather than a new header', () => {
     const folded = 'Subject: hi\r\nTo: Lena <lena@x.com>,\r\n Alex <alex@x.com>\r\n\r\nbody';
     expect(post(ctx, { token, action: 'createDraft', raw: folded }).ok).toBe(true);
@@ -358,5 +368,28 @@ describe('Apps Script endpoint', () => {
     expect(res.result.to).toEqual([{ name: 'Dana', email: 'dana@partner.example' }]);
     expect(res.result.text).toContain('On Fri, Sep 18, 2026 at 7:00 AM Dana <dana@partner.example> wrote:');
     expect(res.result.text).toContain('> Totals attached.');
+  });
+
+  it('accepts structured formatting through high-level actions and keeps it on redraft', () => {
+    const bodyBlocks = [
+      { type: 'paragraph', runs: [{ text: 'Notable facts', bold: true, size: 'large' }] },
+      { type: 'bulletedList', items: [[{ text: 'First fact' }], [{ text: 'Second fact', italic: true }]] },
+    ];
+    const created = post(ctx, { token, action: 'draftNew', to: 'reader@example.com', subject: 'Facts', bodyBlocks });
+    expect(created.ok).toBe(true);
+    expect(created.result.text).toContain('• First fact\n• Second fact');
+    const revised = post(ctx, { token, action: 'redraft', draftId: created.result.draftId, subject: 'Facts, revised' });
+    expect(revised.ok).toBe(true);
+    expect(revised.result.text).toContain('• First fact\n• Second fact');
+  });
+
+  it('rejects malformed or oversized formatted bodies before creating a draft', () => {
+    const malformed = post(ctx, { token, action: 'draftNew', to: 'reader@example.com', subject: 'Facts', bodyBlocks: [{ type: 'table', items: [] }] });
+    expect(malformed.error).toMatch(/Unknown formatted block type/);
+    const oversized = post(ctx, { token, action: 'draftNew', to: 'reader@example.com', subject: 'Facts', bodyBlocks: [
+      { type: 'paragraph', runs: [{ text: 'x'.repeat(9_000) }] },
+    ] });
+    expect(oversized.error).toMatch(/metadata is too large/);
+    expect(ctx.__userProps['gmail-send:draft:rNEW']).toBeUndefined();
   });
 });
